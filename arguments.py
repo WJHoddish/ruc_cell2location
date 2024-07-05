@@ -3,7 +3,7 @@ import argparse
 
 
 def parse_args(extra_args_provider=None, ignore_unknown_args=False):
-    """_summary_
+    """
 
     Args:
         extra_args_provider (_type_, optional): _description_. Defaults to None.
@@ -14,29 +14,40 @@ def parse_args(extra_args_provider=None, ignore_unknown_args=False):
     """
 
     parser = argparse.ArgumentParser(description="Arguments", allow_abbrev=False)
+    parser.add_argument("--metadata")
 
-    # TODO (jiaheng):
-    parser = _add_file_path_args(parser)
+    # TODO: add groups
+    parser = _add_count_matrix_path_args(parser)
+    parser = _add_spatial_path_args(parser)
+    parser = _add_cell2location_args(parser)
 
+    # NOTE: arguments post-processing
     args = parser.parse_args()
+    print(f"> jiaheng: we are parsing {args}")
 
-    # TODO (jiaheng): come up with new global vars
-    file_path, _ = os.path.splitext(args.count)
-    setattr(args, "file_path", file_path + ".h5ad")
+    if args.count_matrix_h5ad is None:
+        args.count_matrix_h5ad, _ = os.path.splitext(args.count_matrix)
+        args.count_matrix_h5ad += ".h5ad"
 
     return args
 
 
-def _add_file_path_args(parser):
-    group = parser.add_argument_group(title="single cell, spatial data")
+def _add_count_matrix_path_args(parser):
+    group = parser.add_mutually_exclusive_group(required=True)
 
-    group.add_argument(
-        "--count",
-        default="~/Data/ESCC_LDX.count.tsv",
-    )
-    group.add_argument(
-        "--metadata",
-        default="~/Data/ESCC_LDX.metadata.tsv",
-    )
+    group.add_argument("--count-matrix")
+    group.add_argument("--count-matrix-h5ad")
+
+    return parser
+
+
+def _add_spatial_path_args(parser):
+    return parser
+
+
+def _add_cell2location_args(parser):
+    group = parser.add_argument_group(title="cell2location")
+
+    group.add_argument("--regression-model")
 
     return parser
